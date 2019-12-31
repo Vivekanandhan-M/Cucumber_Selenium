@@ -7,20 +7,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
-import org.junit.Before;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.gargoylesoftware.htmlunit.javascript.background.JavaScriptExecutor;
 import com.thoughtworks.selenium.Wait;
 
 import cucumber.api.DataTable;
+import cucumber.api.java.After;
+import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
@@ -33,20 +36,28 @@ public class WorkItem {
 	HashMap<String, ArrayList<String>> expectedWorkList = new HashMap<String, ArrayList<String>>();
 	HashMap<String, ArrayList<String>> actualdWorkList = new HashMap<String, ArrayList<String>>();
 	
-
-static {
+@Before("@First")
+public void beforeMethod() {
 	System.setProperty("webdriver.chrome.driver","E:\\Software\\Selenium\\Browser Driver\\GC_Driver\\79\\chromedriver.exe");
 	driver = new ChromeDriver(); 
-}
-	
-@Given("^User logins into acme_test site$")
-public void user_logins_into_acme_test_site() {
-	
 	driver.get("http://www.acme-test.com");
 	driver.manage().window().maximize();
 	driver.findElement(By.id("email")).sendKeys("mvivekeie2009@gmail.com");
 	driver.findElement(By.id("password")).sendKeys("10aer025");
 	driver.findElement(By.id("buttonLogin")).click();
+}
+	
+@SuppressWarnings("deprecation")
+@Given("^User logins into acme_test site$")
+public void user_logins_into_acme_test_site() {
+	
+	/*driver.get("http://www.acme-test.com");
+	driver.manage().window().maximize();
+	driver.findElement(By.id("email")).sendKeys("mvivekeie2009@gmail.com");
+	driver.findElement(By.id("password")).sendKeys("10aer025");
+	driver.findElement(By.id("buttonLogin")).click();*/
+	String title = driver.getTitle();
+	Assert.assertEquals("ACME System 1 - Account - Log In", title);
 }
 
 
@@ -107,7 +118,45 @@ public void compare_the_workitems_results_with_expected_one() {
 	}
 }
 
-@After
+
+
+@Given("^User navigates to home page$")
+public void user_navigates_to_home_page() {
+	driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	driver.findElement(By.xpath(".//a[contains(text(),'Home')]")).click();
+}
+
+@When("^user navigates to monthly reports screen$")
+public void user_navigates_to_monthly_reports_screen() {
+	driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	WebElement reports = driver.findElement(By.xpath(".//div[contains(@id,'dashmenu')]//div[8]//button"));
+	WebElement monthlyReport =  driver.findElement(By.xpath(".//div[contains(@id,'dashmenu')]//div[8]//a[contains(text(),'Download Monthly Report')]"));
+	driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	Actions action = new Actions(driver);
+	action.moveToElement(reports).moveToElement(monthlyReport).click().build().perform();
+}
+
+@Then("^user download the monthly reposts based on \"([^\"]*)\" and \"([^\"]*)\" and \"([^\"]*)\"$")
+public void user_download_the_monthly_reposts_based_on_and_and(String Vendor, String Month, String Year) {
+	driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	driver.findElement(By.id("vendorTaxID")).sendKeys(Vendor);
+	driver.findElement(By.xpath(".//*[contains(@data-id,'reportMonth')]")).click();
+	WebElement monthList = driver.findElement(By.id("reportMonth"));
+	Select selectMonth = new Select(monthList);
+	selectMonth.selectByVisibleText(Month);
+	driver.findElement(By.xpath(".//*[contains(@data-id,'reportYear')]")).click();
+	WebElement yearList = driver.findElement(By.id("reportYear"));
+	Select selectYear = new Select(yearList);
+	selectYear.selectByVisibleText(Year);
+	driver.findElement(By.id("buttonDownload")).click();	
+}
+
+@Then("^Quit the browser completely$")
+public void quit_the_browser_completely() {
+	driver.close();
+}
+
+@After("@Last")
 public void afterTheExecution() {
 	driver.quit();
 }
